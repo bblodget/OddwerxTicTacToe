@@ -1,0 +1,111 @@
+<html>
+
+<head>
+	<title>Oddwerx Tick-Tack-Toe</title>
+	<link rel="stylesheet" href="main.css" type="text/css">
+</head>
+
+<body>
+
+<h2 id="turn">X's Turn</h2>
+
+<a id="tl" href="#tl" class="button">&nbsp;</a>
+<a id="tc" href="#tc" class="button">&nbsp;</a>
+<a id="tr" href="#tr" class="button">&nbsp;</a>
+<br/>
+<a id="ml" href="#ml" class="button">&nbsp;</a>
+<a id="mc" href="#mc" class="button">&nbsp;</a>
+<a id="mr" href="#mr" class="button">&nbsp;</a>
+<br/>
+<a id="bl" href="#bl" class="button">&nbsp;</a>
+<a id="bc" href="#bc" class="button">&nbsp;</a>
+<a id="br" href="#br" class="button">&nbsp;</a>
+
+<p/>
+
+<button id="new_game" type="button">New Game</button>
+<button id="get_json" type="button">Get Json</button>
+<button id="post_json" type="button">Post Json</button>
+
+<div id="result">
+
+</div>
+
+</body>
+
+
+<script type="text/javascript" src="jquery-1.5.2.min.js"></script>
+
+
+<script type="text/javascript">
+jQuery(function() {
+
+	var player="X";
+	var cloud_data;
+	var count=0;
+
+	$('a').click(
+		function(event) {
+			$(this).text(player);
+			if (player=="X") {
+				player="O";
+			} else {
+				player="X";
+			}
+			$('#turn').text(player+"'s Turn");
+		}
+	);
+
+	$('#new_game').click(
+		function(event) {
+			$('#tl').html("&nbsp;");
+			$('#tc').html("&nbsp;");
+			$('#tr').html("&nbsp;");
+
+			$('#ml').html("&nbsp;");
+			$('#mc').html("&nbsp;");
+			$('#mr').html("&nbsp;");
+
+			$('#bl').html("&nbsp;");
+			$('#bc').html("&nbsp;");
+			$('#br').html("&nbsp;");
+
+			player="X"
+			$('#turn').text(player+"'s Turn");
+		}
+	);
+
+	$('#get_json').click(
+		function(event) {
+			var
+			url="http://bots.myrobots.com/channels/575/feed.json?key=AEB7363505F543FC&callback=?"
+			$.getJSON(url,
+				function(data) {
+					cloud_data = data
+					var feeds = data.feeds
+					var last = feeds[feeds.length-1]
+					//alert("field1: "+last.field1);
+					$('#result').html("Get: "+last.field1);	
+				}
+			);
+		}
+	);
+
+	$('#post_json').click(
+		function(event) {
+			count = count + 1
+			cloud_data.channel.field1=count
+			url="http://bots.myrobots.com/update"
+			$('#result').html("Post: "+count);	
+			$.post(url, {key:'AEB7363505F543FC', field1:count} ,
+				function(data) {
+					alert("posted: "+data);
+				}, 'jsonp'
+			);
+		}
+	);
+
+});
+</script>
+
+</html>
