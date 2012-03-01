@@ -42,7 +42,7 @@ jQuery(function() {
 
 	var player="X";
 	var cloud_data;
-	var count=0;
+	var field1=0;
 
 	$('a').click(
 		function(event) {
@@ -86,6 +86,7 @@ jQuery(function() {
 					var last = feeds[feeds.length-1]
 					//alert("field1: "+last.field1);
 					$('#result').html("Get: "+last.field1);	
+					field1 = parseFloat(last.field1)
 				}
 			);
 		}
@@ -93,14 +94,16 @@ jQuery(function() {
 
 	$('#post_json').click(
 		function(event) {
-			count = count + 1
-			cloud_data.channel.field1=count
+			field1 = field1 + 1;
+			cloud_data.channel.field1=field1;
 			url="http://bots.myrobots.com/update"
-			$('#result').html("Post: "+count);	
-			$.post(url, {key:'AEB7363505F543FC', field1:count} ,
+			$('#result').html("Post: "+field1);	
+			$.post(url, 
+				{'key':'AEB7363505F543FC', 'field1':field1} ,
 				function(data) {
 					alert("posted: "+data);
-				}, 'jsonp'
+				}, 
+				'jsonp'
 			);
 		}
 	);
