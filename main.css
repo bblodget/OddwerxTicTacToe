@@ -36,4 +36,12 @@ button {
 	font-size:1.2em;
 }
 
+#game {
+  padding:8px;
+  float:left; 
+}
+
+#logo {
+  padding:8px;
+}
 

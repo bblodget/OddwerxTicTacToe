@@ -7,6 +7,8 @@
 
 <body>
 
+
+<span id="game">
 <h1 id="turn">X's Turn</h1>
 
 <a id="tl" href="#tl" class="button">&nbsp;</a>
@@ -31,6 +33,13 @@
 
 </div>
 
+</span>
+
+
+<span id="logo">
+<img src="OddwerxTicTacToe.jpg">
+</span>
+
 </body>
 
 
@@ -40,38 +49,61 @@
 <script type="text/javascript">
 jQuery(function() {
 
-	var player="X";
 	var cloud_data;
-	var field1=0;
+
+	var timer_id;		// id of the running timer.
+
+	// Which player moved X or O
+	var player_field1="X";  
+
+	// location of move (0..8)
+	// 0 1 2
+	// 3 4 5
+	// 6 7 8
+	var movepos_field2=0;	
+
+	// The game board rows
+	// X or O or E (Empty)
+	var toprow_field3="EEE";
+	var midrow_field4="EEE";
+	var botrow_field5="EEE";
+
+	// The command string
+	// "new_game"
+	// "place" : move specified piece to location
+
+	function newGame() {
+		$('#tl').html("&nbsp;");
+		$('#tc').html("&nbsp;");
+		$('#tr').html("&nbsp;");
+
+		$('#ml').html("&nbsp;");
+		$('#mc').html("&nbsp;");
+		$('#mr').html("&nbsp;");
+
+		$('#bl').html("&nbsp;");
+		$('#bc').html("&nbsp;");
+		$('#br').html("&nbsp;");
+
+		player_field1="X"
+		$('#turn').text(player_field1+"'s Turn");
+	}
 
 	$('a').click(
 		function(event) {
-			$(this).text(player);
-			if (player=="X") {
-				player="O";
+			$(this).text(player_field1);
+			if (player_field1=="X") {
+				player_field1="O";
 			} else {
-				player="X";
+				player_field1="X";
 			}
-			$('#turn').text(player+"'s Turn");
+			$('#turn').text(player_field1+"'s Turn");
 		}
 	);
 
 	$('#new_game').click(
 		function(event) {
-			$('#tl').html("&nbsp;");
-			$('#tc').html("&nbsp;");
-			$('#tr').html("&nbsp;");
-
-			$('#ml').html("&nbsp;");
-			$('#mc').html("&nbsp;");
-			$('#mr').html("&nbsp;");
-
-			$('#bl').html("&nbsp;");
-			$('#bc').html("&nbsp;");
-			$('#br').html("&nbsp;");
-
-			player="X"
-			$('#turn').text(player+"'s Turn");
+			newGame();
 		}
 	);
 
@@ -94,18 +126,38 @@ jQuery(function() {
 
 	$('#post_json').click(
 		function(event) {
-			field1 = field1 + 1;
-			cloud_data.channel.field1=field1;
+			cloud_data.channel.field1=player_field1;
 			url="http://bots.myrobots.com/update"
-			$('#result').html("Post: "+field1);	
+			$('#result').html("Post: "+player_field1);	
+
+			/*
 			$.post(url, 
 				{'key':'AEB7363505F543FC', 'field1':field1} ,
 				function(data) {
 					alert("posted: "+data);
-				}
+				}, 
+				'jsonp'
 			);
+			*/
+
+			$.ajax({
+            	'type' : 'POST',
+           		'url' : url,
+            	'data' : {'key':'AEB7363505F543FC', 
+							'field1':player_field1
+						},
+            	'complete' : function(jqXHR, textStatus) {
+					//alert("complete: "+textStatus);
+            	},        
+           	 	'dataType' : 'jsonp',
+        	});
+			
 		}
 	);
+
+	/* Startup code */
+	newGame();
+
 
 });
 </script>
