@@ -49,7 +49,11 @@
 jQuery(function() {
 
 	/* Constants */
+	// timer intervals
 	var UPDATE_INTERVAL = 5000; // 5 seconds
+	var RETRY_INTERVAL = 500; // 1/2 second
+
+	// myrobot cloud urls
 	var FEED_URL = "http://bots.myrobots.com/channels/575/feed.json?key=AEB7363505F543FC&callback=?";
 	var UPDATE_URL = "http://bots.myrobots.com/update";
 
@@ -72,17 +76,32 @@ jQuery(function() {
 	var WRITE_COMPLETE = 2;
 	var WRITE_FAIL = 3;
 
+	// cloud lock
+	// lock the cloud with CLOUD_WRITE_LOCK
+	// before you modify cloud fields.
+	// the writeCloud() will unlock
+	// after successful write to cloud.
+	// The update() which reads from cloud
+	// will lock the cloud before read
+	// and unlock afterward.
+	var CLOUD_UNLOCKED =0;
+	var CLOUD_WRITE_LOCK =1;
+	var CLOUD_READ_LOCK =2;
+
 
 	/* Variables */
 	var read_id = 0;	// number of reads
-	var whos_turn="X";
 
 	var write_status=WRITE_IDLE;
+	var cloud_lock=CLOUD_UNLOCKED;
 
 	var timer_id1;		// id of interval timer
 	var timer_id2;		// id of retry cloud write timer
+	var timer_id3;		// id of retry grid pad press
+	var timer_id4;		// id of retry newGame
 
-	/* The cloud fields */
+	/************ Begin cloud fields ******************/
+	var field0_entry_id=0;
 	var field1_command = CMD_RESET;
 	var field2_moveto = HOME_POS;
 	var field3_curpos = HOME_POS;
@@ -92,6 +111,31 @@ jQuery(function() {
 	var field6_board= "X_EEE_EEE_EEE";
 	var field7_webid = 0;
 	var field8_botid = 0;
+	// parsed vars from cloud fields
+	var whos_turn="X";
+	// board state
+	var tl;
+	var tc;
+	var tr;
+	var ml;
+	var mc;
+	var mr;
+	var bl;
+	var bc;
+	var br;
+	/************ End cloud fields ******************/
+
+	/************ Begin temp cloud fields ******************/
+	var tmp0_entry_id=0;
+	var tmp1_command = CMD_RESET;
+	var tmp2_moveto = HOME_POS;
+	var tmp3_curpos = HOME_POS;
+	var tmp4_status = STATUS_READY;
+	var tmp5_avail = "XOXOXOXOX";
+	var tmp6_board= "X_EEE_EEE_EEE";
+	var tmp7_webid = 0;
+	var tmp8_botid = 0;
+	/************ End temp cloud fields ******************/
 
 
 	// The command string
@@ -112,44 +156,101 @@ jQuery(function() {
 		$('#bc').html(".");
 		$('#br').html(".");
 
-		// Init the cloud fields
-		field1_command = CMD_RESET;
-		field2_moveto = HOME_POS;
-		field3_curpos = HOME_POS;
-		field4_status = STATUS_READY;
-		field5_avail = "XOXOXOXOX";
-		field6_board= "X_EEE_EEE_EEE";
-		field7_webid = 0;
-		field8_botid = 0;
+		if (cloud_lock==CLOUD_UNLOCKED) {
+			cloud_lock=CLOUD_WRITE_LOCK;
 
-		// temp cloud fields
-		tmp1_command = CMD_RESET;
-		tmp2_moveto = HOME_POS;
-		tmp3_curpos = HOME_POS;
-		tmp4_status = STATUS_READY;
-		tmp5_avail = "XOXOXOXOX";
-		tmp6_board= "X_EEE_EEE_EEE";
-		tmp7_webid = 0;
-		tmp8_botid = 0;
+			$('#status').html("New game...");	
 
-		whos_turn="Please wait..."
-		$('#turn').text(whos_turn);
+			// Init the cloud fields
+			field1_command = CMD_RESET;
+			field2_moveto = HOME_POS;
+			field3_curpos = HOME_POS;
+			field4_status = STATUS_READY;
+			field5_avail = "XOXOXOXOX";
+			field6_board= "X_EEE_EEE_EEE";
+			field7_webid = 0;
+			field8_botid = 0;
 
-		// writes fields to the cloud
+			// temp cloud fields
+			tmp1_command = CMD_RESET;
+			tmp2_moveto = HOME_POS;
+			tmp3_curpos = HOME_POS;
+			tmp4_status = STATUS_READY;
+			tmp5_avail = "XOXOXOXOX";
+			tmp6_board= "X_EEE_EEE_EEE";
+			tmp7_webid = 0;
+			tmp8_botid = 0;
+
+			whos_turn="X"
+			$('#turn').text("Please wait...");
+
+			write_status=WRITE_IDLE;
+
+			// writes fields to the cloud
+			// writeCloud unlocks the cloud_lock
+			// when it has been successful.
+			writeCloud();
+			$('#status').html("New game complete");	
+		} else {
+			$('#status').html("New game delayed");	
+			timer_id4 = setTimeout(newGame, RETRY_INTERVAL);	
+		}
+	}
+
+	function boardClicked() {
+		if (whos_turn=="X") {
+			whos_turn="O";
+		} else {
+			whos_turn="X";
+		}
+
+		field6_board = whos_turn+"_"+tl+tc+tr+"_"+
+			ml+mc+mr+"_"+
+			bl+bc+br;
+
 		writeCloud();
 	}
 
+	function tl_click() {
+		// check that position is empty
+		if (tl == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed tl");	
+				tl = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" tl press fail.");	
+				timer_id3 = setTimeout(tl_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#tl').click(
+		function(event) {
+			tl_click();
+		}
+	);
+
+/*
 	$('a').click(
 		function(event) {
-			$(this).text(whos_turn);
+			//$(this).text(whos_turn);
+
 			if (whos_turn=="X") {
 				whos_turn="O";
 			} else {
 				whos_turn="X";
 			}
+
+			field6_board
+
+
+
 			$('#turn').text(whos_turn+"'s Turn");
 		}
 	);
+	*/
 
 	$('#new_game').click(
 		function(event) {
@@ -162,6 +263,7 @@ jQuery(function() {
 			function(data) {
 				var feeds = data.feeds;
 				var last = feeds[feeds.length-1];
+				tmp0_entry_id = parseInt(last.entry_id);
 				tmp1_command = parseInt(last.field1);
 				tmp2_moveto = parseInt(last.field2);
 				tmp3_curpos = parseInt(last.field3);
@@ -175,6 +277,7 @@ jQuery(function() {
 	}
 
 	function acceptRead() {
+		field0_entry_id = tmp0_entry_id;
 		field1_command = tmp1_command;
 		field2_moveto = tmp2_moveto;
 		field3_curpos = tmp3_curpos;
@@ -184,11 +287,29 @@ jQuery(function() {
 		field7_webid = tmp7_webid;
 		field8_botid = tmp8_botid;
 
+		// parse board state
+		whos_turn = field6_board.charAt(0);
+
+		tl = field6_board.charAt(2);
+		//alert("acceptRead, tl: "+tl);
+		tc = field6_board.charAt(3);
+		tr = field6_board.charAt(4);
+
+		ml = field6_board.charAt(6);
+		mc = field6_board.charAt(7);
+		mr = field6_board.charAt(8);
+
+		bl = field6_board.charAt(10);
+		bc = field6_board.charAt(11);
+		br = field6_board.charAt(12);
+
 		read_id = read_id + 1;
 	}
 
 	function fieldStatus() {
 		var read_status=	
+			"cloud_lock: " + cloud_lock + "<br/>" +
+			"write_status: " + write_status + "<br/>" +
 			"read_id: " + read_id + "<br/>" +
 			"field1_command: " + field1_command + "<br/>" +
 			"field2_moveto: " + field2_moveto + "<br/>" +
@@ -259,6 +380,7 @@ jQuery(function() {
 						var webid = parseInt(last.field7)
 						if (webid == field7_webid) {
 							write_status = WRITE_IDLE;
+							cloud_lock= CLOUD_UNLOCKED;
 							$('#status').html("writeCloud success");	
 						} else {
 							write_status = WRITE_FAIL;
@@ -278,44 +400,40 @@ jQuery(function() {
 	);
 
 	function updateBoard() {
-		whos_turn = field6_board.charAt(0);
 
-		var tl = field6_board.charAt(2);
-		var tc = field6_board.charAt(3);
-		var tr = field6_board.charAt(4);
+		// temp version of board state
+		// so we can change 'E'->'&nbsp;'
+		var ttl = tl, ttc = tc, ttr = tr;
+		var mml = ml, mmc = mc, mmr = mr;
+		var bbl = bl, bbc = bc, bbr = br;
 
-		var ml = field6_board.charAt(6);
-		var mc = field6_board.charAt(7);
-		var mr = field6_board.charAt(8);
+		$('#status').append("<br/>tl: "+tl);
+		//alert("updateBoard, tl: "+tl);
 
-		var bl = field6_board.charAt(10);
-		var bc = field6_board.charAt(11);
-		var br = field6_board.charAt(12);
+		if (ttl=="E") {ttl="&nbsp;";}
+		if (ttc=="E") {ttc="&nbsp;";}
+		if (ttr=="E") {ttr="&nbsp;";}
 
-		if (tl=="E") {tl="&nbsp;";}
-		if (tc=="E") {tc="&nbsp;";}
-		if (tr=="E") {tr="&nbsp;";}
+		if (mml=="E") {mml="&nbsp;";}
+		if (mmc=="E") {mmc="&nbsp;";}
+		if (mmr=="E") {mmr="&nbsp;";}
 
-		if (ml=="E") {ml="&nbsp;";}
-		if (mc=="E") {mc="&nbsp;";}
-		if (mr=="E") {mr="&nbsp;";}
-
-		if (bl=="E") {bl="&nbsp;";}
-		if (bc=="E") {bc="&nbsp;";}
-		if (br=="E") {br="&nbsp;";}
+		if (bbl=="E") {bbl="&nbsp;";}
+		if (bbc=="E") {bbc="&nbsp;";}
+		if (bbr=="E") {bbr="&nbsp;";}
 
 		// set the grid
-		$('#tl').html(tl);
-		$('#tc').html(tc);
-		$('#tr').html(tr);
+		$('#tl').html(ttl);
+		$('#tc').html(ttc);
+		$('#tr').html(ttr);
 
-		$('#ml').html(ml);
-		$('#mc').html(mc);
-		$('#mr').html(mr);
+		$('#ml').html(mml);
+		$('#mc').html(mmc);
+		$('#mr').html(mmr);
 
-		$('#bl').html(bl);
-		$('#bc').html(bc);
-		$('#br').html(br);
+		$('#bl').html(bbl);
+		$('#bc').html(bbc);
+		$('#br').html(bbr);
 
 		// update whos_turn
 		$('#turn').text(whos_turn+"'s Turn");
@@ -323,22 +441,30 @@ jQuery(function() {
 	}
 
 	function update() {
-		// Only update if we are not currently writing to the cloud.
-		if (write_status == WRITE_IDLE) {
+		// get the cloud lock before updating
+		if (cloud_lock == CLOUD_UNLOCKED) {
+			cloud_lock=CLOUD_READ_LOCK;
 			readCloud();
 			// check if data has changed
-			if (tmp7_webid != field7_webid) {
+			if (tmp0_entry_id != field0_entry_id) {
 				$('#status').html("update ...");	
 				acceptRead();
 				updateBoard();
 				$('#status').html("update done");	
 			}
+			cloud_lock=CLOUD_UNLOCKED;
+			timer_id1 = setTimeout(update,UPDATE_INTERVAL);
+		} else {
+			// try again soon
+			//alert("delay update");
+			$('#status').html("cloud_lock: "+cloud_lock);
+			timer_id1 = setTimeout(update,RETRY_INTERVAL);
 		}
 	}
 
 	/* Startup code */
-	newGame();
-	timer_id1 = setInterval(update,UPDATE_INTERVAL);
+	//newGame();
+	update();
 
 
 });
