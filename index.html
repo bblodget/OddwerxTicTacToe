@@ -26,11 +26,10 @@
 <p/>
 
 <button id="new_game" type="button">New Game</button>
-<button id="get_json" type="button">Get Json</button>
+<button id="get_json" type="button">Read Cloud Data</button>
 <button id="post_json" type="button">Post Json</button>
 
-<div id="result">
-
+<div id="status">
 </div>
 
 </span>
@@ -49,55 +48,106 @@
 <script type="text/javascript">
 jQuery(function() {
 
-	var cloud_data;
+	/* Constants */
+	var UPDATE_INTERVAL = 5000; // 5 seconds
+	var FEED_URL = "http://bots.myrobots.com/channels/575/feed.json?key=AEB7363505F543FC&callback=?";
+	var UPDATE_URL = "http://bots.myrobots.com/update";
 
-	var timer_id;		// id of the running timer.
+	
+	// commands
+	var CMD_RESET = 0;
+	var CMD_MOVETO = 1;
+	var CMD_X_WON = 2;
+	var CMD_Y_WON = 3;
+	var CMD_CAT_WON = 4;
 
-	// Which player moved X or O
-	var player_field1="X";  
+	var HOME_POS = 33;
 
-	// location of move (0..8)
-	// 0 1 2
-	// 3 4 5
-	// 6 7 8
-	var movepos_field2=0;	
+	var STATUS_BUSY ="busy";
+	var STATUS_READY = "ready";
 
-	// The game board rows
-	// X or O or E (Empty)
-	var toprow_field3="EEE";
-	var midrow_field4="EEE";
-	var botrow_field5="EEE";
+	// write status
+	var WRITE_IDLE = 0;
+	var WRITE_INPROGRESS = 1;
+	var WRITE_COMPLETE = 2;
+	var WRITE_FAIL = 3;
+
+
+	/* Variables */
+	var read_id = 0;	// number of reads
+	var whos_turn="X";
+
+	var write_status=WRITE_IDLE;
+
+	var timer_id1;		// id of interval timer
+	var timer_id2;		// id of retry cloud write timer
+
+	/* The cloud fields */
+	var field1_command = CMD_RESET;
+	var field2_moveto = HOME_POS;
+	var field3_curpos = HOME_POS;
+	var field4_status = STATUS_READY;
+	var field5_avail = "XOXOXOXOX";
+	// field6_board: whosTurn_topRow_midRow_botRow
+	var field6_board= "X_EEE_EEE_EEE";
+	var field7_webid = 0;
+	var field8_botid = 0;
+
 
 	// The command string
 	// "new_game"
 	// "place" : move specified piece to location
 
 	function newGame() {
-		$('#tl').html("&nbsp;");
-		$('#tc').html("&nbsp;");
-		$('#tr').html("&nbsp;");
+		// Reset the Grid
+		$('#tl').html(".");
+		$('#tc').html(".");
+		$('#tr').html(".");
 
-		$('#ml').html("&nbsp;");
-		$('#mc').html("&nbsp;");
-		$('#mr').html("&nbsp;");
+		$('#ml').html(".");
+		$('#mc').html(".");
+		$('#mr').html(".");
 
-		$('#bl').html("&nbsp;");
-		$('#bc').html("&nbsp;");
-		$('#br').html("&nbsp;");
+		$('#bl').html(".");
+		$('#bc').html(".");
+		$('#br').html(".");
 
-		player_field1="X"
-		$('#turn').text(player_field1+"'s Turn");
+		// Init the cloud fields
+		field1_command = CMD_RESET;
+		field2_moveto = HOME_POS;
+		field3_curpos = HOME_POS;
+		field4_status = STATUS_READY;
+		field5_avail = "XOXOXOXOX";
+		field6_board= "X_EEE_EEE_EEE";
+		field7_webid = 0;
+		field8_botid = 0;
+
+		// temp cloud fields
+		tmp1_command = CMD_RESET;
+		tmp2_moveto = HOME_POS;
+		tmp3_curpos = HOME_POS;
+		tmp4_status = STATUS_READY;
+		tmp5_avail = "XOXOXOXOX";
+		tmp6_board= "X_EEE_EEE_EEE";
+		tmp7_webid = 0;
+		tmp8_botid = 0;
+
+		whos_turn="Please wait..."
+		$('#turn').text(whos_turn);
+
+		// writes fields to the cloud
+		writeCloud();
 	}
 
 	$('a').click(
 		function(event) {
-			$(this).text(player_field1);
-			if (player_field1=="X") {
-				player_field1="O";
+			$(this).text(whos_turn);
+			if (whos_turn=="X") {
+				whos_turn="O";
 			} else {
-				player_field1="X";
+				whos_turn="X";
 			}
-			$('#turn').text(player_field1+"'s Turn");
+			$('#turn').text(whos_turn+"'s Turn");
 		}
 	);
 
@@ -107,56 +157,188 @@ jQuery(function() {
 		}
 	);
 
+	function readCloud() {
+		$.getJSON(FEED_URL,
+			function(data) {
+				var feeds = data.feeds;
+				var last = feeds[feeds.length-1];
+				tmp1_command = parseInt(last.field1);
+				tmp2_moveto = parseInt(last.field2);
+				tmp3_curpos = parseInt(last.field3);
+				tmp4_status = parseInt(last.field4);
+				tmp5_avail = last.field5;
+				tmp6_board = last.field6;
+				tmp7_webid = parseInt(last.field7);
+				tmp8_botid = parseInt(last.field8);
+			}
+		);
+	}
+
+	function acceptRead() {
+		field1_command = tmp1_command;
+		field2_moveto = tmp2_moveto;
+		field3_curpos = tmp3_curpos;
+		field4_status = tmp4_status;
+		field5_avail = tmp5_avail;
+		field6_board = tmp6_board;
+		field7_webid = tmp7_webid;
+		field8_botid = tmp8_botid;
+
+		read_id = read_id + 1;
+	}
+
+	function fieldStatus() {
+		var read_status=	
+			"read_id: " + read_id + "<br/>" +
+			"field1_command: " + field1_command + "<br/>" +
+			"field2_moveto: " + field2_moveto + "<br/>" +
+			"field3_curpos: " + field3_curpos + "<br/>" +
+			"field4_status: " + field4_status + "<br/>" +
+			"field5_avail: " + field5_avail + "<br/>" +
+			"field6_board: " + field6_board + "<br/>" +
+			"field7_webid: " + field7_webid + "<br/>" +
+			"field8_botid: " + field8_botid + "<br/>";
+					 
+		$('#status').html(read_status);	
+	}
+
 	$('#get_json').click(
 		function(event) {
-			var
-			url="http://bots.myrobots.com/channels/575/feed.json?key=AEB7363505F543FC&callback=?"
-			$.getJSON(url,
-				function(data) {
-					cloud_data = data
-					var feeds = data.feeds
-					var last = feeds[feeds.length-1]
-					//alert("field1: "+last.field1);
-					$('#result').html("Get: "+last.field1);	
-					field1 = parseFloat(last.field1)
-				}
-			);
+			readCloud();
+			acceptRead();
+			fieldStatus();
 		}
 	);
+
+	function writeCloud() {
+
+		// increment webid for first write try
+		if (write_status == WRITE_IDLE) {
+			field7_webid = field7_webid+1;
+		}
+
+		write_status = WRITE_INPROGRESS;
+
+		$('#status').html("writeCloud ... "+field7_webid);	
+
+		$.post(UPDATE_URL, 
+			{	'key':'AEB7363505F543FC', 
+				'field1':field1_command,
+				'field2':field2_moveto,
+				'field3':field3_curpos,
+				'field4':field4_status,
+				'field5':field5_avail,
+				'field6':field6_board,
+				'field7':field7_webid,
+				'field8':field8_botid
+			} ,
+			function(data) { 
+				// MyCloud returns integer instead
+				// of valid json so a parserror is
+				// generated and this success function
+				// is never called. JSONP is required
+				// in the browser to get around the same origin
+				// policy.  In short we don't
+				// know if our write was successful so we have
+				// to do a kludgy workaround of doing a cloudRead
+				// at the completion to find out if the write
+				// was successful.
+			}, 
+			'jsonp'
+		).complete(
+			function() {
+				write_status = WRITE_COMPLETE;
+				$('#status').html("writeCloud complete");	
+
+				// Read from cloud and check field7_webid
+				// to see if the write worked.
+				$.getJSON(FEED_URL,
+					function(data) {
+						var feeds = data.feeds
+						var last = feeds[feeds.length-1]
+						var webid = parseInt(last.field7)
+						if (webid == field7_webid) {
+							write_status = WRITE_IDLE;
+							$('#status').html("writeCloud success");	
+						} else {
+							write_status = WRITE_FAIL;
+							$('#status').html("writeCloud failed");	
+							timer_id2 = setTimeout(writeCloud,UPDATE_INTERVAL);
+						}
+					}
+				);
+			}
+		);
+	}
 
 	$('#post_json').click(
 		function(event) {
-			cloud_data.channel.field1=player_field1;
-			url="http://bots.myrobots.com/update"
-			$('#result').html("Post: "+player_field1);	
-
-			/*
-			$.post(url, 
-				{'key':'AEB7363505F543FC', 'field1':field1} ,
-				function(data) {
-					alert("posted: "+data);
-				}, 
-				'jsonp'
-			);
-			*/
-
-			$.ajax({
-            	'type' : 'POST',
-           		'url' : url,
-            	'data' : {'key':'AEB7363505F543FC', 
-							'field1':player_field1
-						},
-            	'complete' : function(jqXHR, textStatus) {
-					//alert("complete: "+textStatus);
-            	},        
-           	 	'dataType' : 'jsonp',
-        	});
-			
+			writeCloud();
 		}
 	);
 
+	function updateBoard() {
+		whos_turn = field6_board.charAt(0);
+
+		var tl = field6_board.charAt(2);
+		var tc = field6_board.charAt(3);
+		var tr = field6_board.charAt(4);
+
+		var ml = field6_board.charAt(6);
+		var mc = field6_board.charAt(7);
+		var mr = field6_board.charAt(8);
+
+		var bl = field6_board.charAt(10);
+		var bc = field6_board.charAt(11);
+		var br = field6_board.charAt(12);
+
+		if (tl=="E") {tl="&nbsp;";}
+		if (tc=="E") {tc="&nbsp;";}
+		if (tr=="E") {tr="&nbsp;";}
+
+		if (ml=="E") {ml="&nbsp;";}
+		if (mc=="E") {mc="&nbsp;";}
+		if (mr=="E") {mr="&nbsp;";}
+
+		if (bl=="E") {bl="&nbsp;";}
+		if (bc=="E") {bc="&nbsp;";}
+		if (br=="E") {br="&nbsp;";}
+
+		// set the grid
+		$('#tl').html(tl);
+		$('#tc').html(tc);
+		$('#tr').html(tr);
+
+		$('#ml').html(ml);
+		$('#mc').html(mc);
+		$('#mr').html(mr);
+
+		$('#bl').html(bl);
+		$('#bc').html(bc);
+		$('#br').html(br);
+
+		// update whos_turn
+		$('#turn').text(whos_turn+"'s Turn");
+
+	}
+
+	function update() {
+		// Only update if we are not currently writing to the cloud.
+		if (write_status == WRITE_IDLE) {
+			readCloud();
+			// check if data has changed
+			if (tmp7_webid != field7_webid) {
+				$('#status').html("update ...");	
+				acceptRead();
+				updateBoard();
+				$('#status').html("update done");	
+			}
+		}
+	}
+
 	/* Startup code */
 	newGame();
+	timer_id1 = setInterval(update,UPDATE_INTERVAL);
 
 
 });
