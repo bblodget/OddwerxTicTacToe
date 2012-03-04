@@ -35,9 +35,11 @@
 </span>
 
 
+<!--
 <span id="logo">
 <img src="OddwerxTicTacToe.jpg">
 </span>
+-->
 
 </body>
 
@@ -211,6 +213,8 @@ jQuery(function() {
 		writeCloud();
 	}
 
+	/*********** Begin Top Left Click ***********/
+
 	function tl_click() {
 		// check that position is empty
 		if (tl == "E") {
@@ -231,6 +235,213 @@ jQuery(function() {
 			tl_click();
 		}
 	);
+
+	/*********** End Top Left Click ***********/
+
+	/*********** Begin Top Center Click ***********/
+
+	function tc_click() {
+		// check that position is empty
+		if (tc == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed tc");	
+				tc = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" tc press fail.");	
+				timer_id3 = setTimeout(tc_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#tc').click(
+		function(event) {
+			tc_click();
+		}
+	);
+
+	/*********** End Top Center Click ***********/
+
+	/*********** Begin Top Right Click ***********/
+
+	function tr_click() {
+		// check that position is empty
+		if (tr == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed tr");	
+				tr = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" tr press fail.");	
+				timer_id3 = setTimeout(tr_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#tr').click(
+		function(event) {
+			tr_click();
+		}
+	);
+
+	/*********** End Top Right Click ***********/
+
+
+	/*********** Begin Middle Left Click ***********/
+
+	function ml_click() {
+		// check that position is empty
+		if (ml == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed ml");	
+				ml = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" ml press fail.");	
+				timer_id3 = setTimeout(ml_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#ml').click(
+		function(event) {
+			ml_click();
+		}
+	);
+
+	/*********** End Middle Left Click ***********/
+
+
+	/*********** Begin Middle Center Click ***********/
+
+	function mc_click() {
+		// check that position is empty
+		if (mc == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed mc");	
+				mc = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" mc press fail.");	
+				timer_id3 = setTimeout(mc_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#mc').click(
+		function(event) {
+			mc_click();
+		}
+	);
+
+	/*********** End Middle Center Click ***********/
+
+
+	/*********** Begin Middle Right Click ***********/
+
+	function mr_click() {
+		// check that position is empty
+		if (mr == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed mr");	
+				mr = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" mr press fail.");	
+				timer_id3 = setTimeout(mr_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#mr').click(
+		function(event) {
+			mr_click();
+		}
+	);
+
+	/*********** End Middle Right Click ***********/
+
+
+	/*********** Begin Bottom Left Click ***********/
+
+	function bl_click() {
+		// check that position is empty
+		if (bl == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed bl");	
+				bl = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" bl press fail.");	
+				timer_id3 = setTimeout(bl_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#bl').click(
+		function(event) {
+			bl_click();
+		}
+	);
+
+	/*********** End Bottom Left Click ***********/
+
+
+	/*********** Begin Bottom Center Click ***********/
+
+	function bc_click() {
+		// check that position is empty
+		if (bc == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed bc");	
+				bc = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" bc press fail.");	
+				timer_id3 = setTimeout(bc_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#bc').click(
+		function(event) {
+			bc_click();
+		}
+	);
+
+	/*********** End Bottom Center Left Click ***********/
+
+	/*********** Begin Bottom Right Click ***********/
+
+	function br_click() {
+		// check that position is empty
+		if (br == "E") {
+			if (cloud_lock == CLOUD_UNLOCKED) {
+				cloud_lock=CLOUD_WRITE_LOCK;
+				$('#status').html(whos_turn+" pressed br");	
+				br = whos_turn;
+				boardClicked();
+			} else {
+				$('#status').append("<br/>"+whos_turn+" br press fail.");	
+				timer_id3 = setTimeout(br_click, RETRY_INTERVAL);	
+			}
+		}
+	}
+
+	$('#br').click(
+		function(event) {
+			br_click();
+		}
+	);
+
+	/*********** End Bottom Right Click ***********/
 
 /*
 	$('a').click(
