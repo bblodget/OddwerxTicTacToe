@@ -103,8 +103,8 @@ jQuery(function() {
 	/************ Begin cloud fields ******************/
 	var field0_entry_id=0;
 	var field1_command = CMD_RESET;
-	var field2_moveto = HOME_POS;
-	var field3_curpos = HOME_POS;
+	var field2_row = HOME_POS;
+	var field3_col = HOME_POS;
 	var field4_status = STATUS_READY;
 	var field5_avail = "XOXOXOXOX";
 	// field6_board: whosTurn_topRow_midRow_botRow
@@ -128,8 +128,8 @@ jQuery(function() {
 	/************ Begin temp cloud fields ******************/
 	var tmp0_entry_id=0;
 	var tmp1_command = CMD_RESET;
-	var tmp2_moveto = HOME_POS;
-	var tmp3_curpos = HOME_POS;
+	var tmp2_row = HOME_POS;
+	var tmp3_col = HOME_POS;
 	var tmp4_status = STATUS_READY;
 	var tmp5_avail = "XOXOXOXOX";
 	var tmp6_board= "X_EEE_EEE_EEE";
@@ -163,8 +163,8 @@ jQuery(function() {
 
 			// Init the cloud fields
 			field1_command = CMD_RESET;
-			field2_moveto = HOME_POS;
-			field3_curpos = HOME_POS;
+			field2_row = HOME_POS;
+			field3_col = HOME_POS;
 			field4_status = STATUS_READY;
 			field5_avail = "XOXOXOXOX";
 			field6_board= "X_EEE_EEE_EEE";
@@ -173,8 +173,8 @@ jQuery(function() {
 
 			// temp cloud fields
 			tmp1_command = CMD_RESET;
-			tmp2_moveto = HOME_POS;
-			tmp3_curpos = HOME_POS;
+			tmp2_row = HOME_POS;
+			tmp3_col = HOME_POS;
 			tmp4_status = STATUS_READY;
 			tmp5_avail = "XOXOXOXOX";
 			tmp6_board= "X_EEE_EEE_EEE";
@@ -220,6 +220,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed tl");	
 				tl = whos_turn;
+				field2_row = 4;
+				field3_col = 0;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" tl press fail.");	
@@ -245,6 +247,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed tc");	
 				tc = whos_turn;
+				field2_row = 4;
+				field3_col = 2;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" tc press fail.");	
@@ -270,6 +274,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed tr");	
 				tr = whos_turn;
+				field2_row = 4;
+				field3_col = 4;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" tr press fail.");	
@@ -296,6 +302,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed ml");	
 				ml = whos_turn;
+				field2_row = 3;
+				field3_col = 0;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" ml press fail.");	
@@ -322,6 +330,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed mc");	
 				mc = whos_turn;
+				field2_row = 3;
+				field3_col = 2;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" mc press fail.");	
@@ -348,6 +358,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed mr");	
 				mr = whos_turn;
+				field2_row = 3;
+				field3_col = 4;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" mr press fail.");	
@@ -374,6 +386,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed bl");	
 				bl = whos_turn;
+				field2_row = 2;
+				field3_col = 0;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" bl press fail.");	
@@ -400,6 +414,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed bc");	
 				bc = whos_turn;
+				field2_row = 2;
+				field3_col = 2;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" bc press fail.");	
@@ -425,6 +441,8 @@ jQuery(function() {
 				cloud_lock=CLOUD_WRITE_LOCK;
 				$('#status').html(whos_turn+" pressed br");	
 				br = whos_turn;
+				field2_row = 2;
+				field3_col = 4;
 				boardClicked();
 			} else {
 				$('#status').append("<br/>"+whos_turn+" br press fail.");	
@@ -474,8 +492,8 @@ jQuery(function() {
 				var last = feeds[feeds.length-1];
 				tmp0_entry_id = parseInt(last.entry_id);
 				tmp1_command = parseInt(last.field1);
-				tmp2_moveto = parseInt(last.field2);
-				tmp3_curpos = parseInt(last.field3);
+				tmp2_row = parseInt(last.field2);
+				tmp3_col = parseInt(last.field3);
 				tmp4_status = parseInt(last.field4);
 				tmp5_avail = last.field5;
 				tmp6_board = last.field6;
@@ -488,8 +506,8 @@ jQuery(function() {
 	function acceptRead() {
 		field0_entry_id = tmp0_entry_id;
 		field1_command = tmp1_command;
-		field2_moveto = tmp2_moveto;
-		field3_curpos = tmp3_curpos;
+		field2_row = tmp2_row;
+		field3_col = tmp3_col;
 		field4_status = tmp4_status;
 		field5_avail = tmp5_avail;
 		field6_board = tmp6_board;
@@ -521,8 +539,8 @@ jQuery(function() {
 			"write_status: " + write_status + "<br/>" +
 			"read_id: " + read_id + "<br/>" +
 			"field1_command: " + field1_command + "<br/>" +
-			"field2_moveto: " + field2_moveto + "<br/>" +
-			"field3_curpos: " + field3_curpos + "<br/>" +
+			"field2_row: " + field2_row + "<br/>" +
+			"field3_col: " + field3_col + "<br/>" +
 			"field4_status: " + field4_status + "<br/>" +
 			"field5_avail: " + field5_avail + "<br/>" +
 			"field6_board: " + field6_board + "<br/>" +
@@ -554,8 +572,8 @@ jQuery(function() {
 		$.post(UPDATE_URL, 
 			{	'key':'AEB7363505F543FC', 
 				'field1':field1_command,
-				'field2':field2_moveto,
-				'field3':field3_curpos,
+				'field2':field2_row,
+				'field3':field3_col,
 				'field4':field4_status,
 				'field5':field5_avail,
 				'field6':field6_board,
